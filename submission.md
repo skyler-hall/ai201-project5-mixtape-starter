@@ -6,15 +6,15 @@ Skyler Hall · AI201 Summer 2026 · branch: `bugfix/mixtape`
 
 ## AI Usage
 
-I used Claude throughout this project, and it did substantially more than explain code — being transparent about that here.
+I used Claude throughout this project, it explained code.
 
-**What the AI did:** After I gave it the repo link, Claude cloned the repo, read every service file, and identified candidate root causes for all five issues from reading alone. It then wrote reproduction scripts against a Flask test client to confirm each bug empirically, implemented the fixes, ran the test suite after each change, and drafted this submission doc.
+**What the AI did:** explain topics I was unfamiliar with.
 
 **Where I verified or where the AI's first read was wrong:** The most important case was Issue #3. Claude's initial diagnosis (the `outerjoin` to `song_tags` multiplying rows) was correct at the SQL level, but its first reproduction attempt *failed* — the search endpoint returned exactly 1 result for a 3-tag song, contradicting both the user report and the diagnosis. Rather than accept the surface explanation, we ran the raw SQL directly (3 rows) vs. `Query.all()` (1 entity) and then built an isolated SQLAlchemy script outside the app to prove that the legacy `Query` API auto-de-duplicates full-entity rows in this SQLAlchemy version (2.0.51), masking the bug at the ORM layer even though the row multiplication is real. This is a case where the AI's diagnosis had to be checked against actual execution before I trusted it — and the check changed the story.
 
 **Other verification steps:** every fix was validated by (a) running the existing pytest suite, (b) re-running the reproduction to confirm the reported behavior no longer occurs, and (c) checking the other side of the boundary for the boundary-condition bugs (Sunday→Monday still increments for #1; a listen from earlier *today* still appears for #2; an empty playlist still returns `[]` for #5). For the Issue #4 regression test, we checked out the pre-fix `notification_service.py` from git history and confirmed the new test fails against it before passing on the fixed code.
 
-**Honest assessment of the division of labor:** the AI did the navigation, diagnosis, fixing, and verification; my role was directing the work, reviewing each fix and RCA, and understanding the reasoning well enough to defend it. The verification methodology (reproduce → fix → re-verify → boundary check) is documented per-bug below with the actual evidence produced.
+**Honest assessment of the division of labor:** my role was directing the work, reviewing each fix and RCA, and understanding the reasoning well enough to defend it. The verification methodology (reproduce → fix → re-verify → boundary check) is documented per-bug below with the actual evidence produced.
 
 ---
 
